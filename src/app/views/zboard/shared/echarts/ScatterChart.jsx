@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import ReactECharts from 'echarts-for-react';
-import { Box, CircularProgress } from "@mui/material";
+import { Box, CircularProgress, useTheme, useMediaQuery } from "@mui/material";
 import { fetchVolatilityAnalysis } from "/src/__api__/db/apiService";
 
 const ScatterChart = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,6 +39,13 @@ const ScatterChart = () => {
     const maxIVRatio = Math.max(...data.map(item => item.iv_to_ewma_ratio_current));
 
     return {
+      grid: {
+        top: isMobile ? '15%' : '10%',
+        right: isMobile ? '15%' : '10%',
+        bottom: isMobile ? '15%' : '10%',
+        left: isMobile ? '15%' : '10%',
+        containLabel: true
+      },
       tooltip: {
         trigger: 'item',
         formatter: function (params) {
@@ -51,13 +60,19 @@ const ScatterChart = () => {
         name: 'Beta IBOV',
         nameLocation: 'middle',
         nameGap: 30,
-        type: 'value'
+        type: 'value',
+        axisLabel: {
+          fontSize: isMobile ? 10 : 12
+        }
       },
       yAxis: {
         name: 'Correlation IBOV',
         nameLocation: 'middle',
         nameGap: 30,
-        type: 'value'
+        type: 'value',
+        axisLabel: {
+          fontSize: isMobile ? 10 : 12
+        }
       },
       visualMap: [{
         type: 'continuous',
@@ -68,13 +83,15 @@ const ScatterChart = () => {
           color: ['blue', 'yellow', 'red']
         },
         textStyle: {
-          color: '#333'
+          color: theme.palette.text.primary,
+          fontSize: isMobile ? 10 : 12
         }
       }],
       series: [{
         type: 'scatter',
         symbolSize: function (data) {
-          return (data[2] - minVolume) / (maxVolume - minVolume) * 50 + 5; // Adjust size scaling as needed
+          const baseSize = isMobile ? 3 : 5;
+          return (data[2] - minVolume) / (maxVolume - minVolume) * 50 + baseSize;
         },
         data: scatterData
       }]
@@ -82,11 +99,20 @@ const ScatterChart = () => {
   };
 
   return (
-    <Box>
+    <Box sx={{ width: '100%', height: '100%' }}>
       {loading ? (
-        <CircularProgress />
+        <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+          <CircularProgress />
+        </Box>
       ) : (
-        <ReactECharts option={getChartOptions()} style={{ height: '600px' }} />
+        <ReactECharts 
+          option={getChartOptions()} 
+          style={{ 
+            height: isMobile ? '300px' : '600px',
+            width: '100%' 
+          }}
+          opts={{ renderer: 'canvas' }}
+        />
       )}
     </Box>
   );

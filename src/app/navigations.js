@@ -58,7 +58,8 @@ const navigations = [
   children: [
     { name: "Brasil", iconText: "SI", path: "/recommendations/brasil" },
     { name: "USA-NASDAQ", iconText: "SU", path: "/recommendations/nasdaq" },
-    { name: "USA-NYSE", iconText: "SU", path: "/recommendations/nyse" }
+    { name: "USA-NYSE", iconText: "SU", path: "/recommendations/nyse" },
+    
 
   ]
 },

@@ -16,7 +16,7 @@ import { fetchStrongBuyAnalysis } from "/src/__api__/db/apiService"; // Assure p
 const StyledTableContainer = styled(TableContainer)({
   maxHeight: 400,
   '& ::-webkit-scrollbar': {
-    width: '0.4em',
+    width: '0.6em',
     height: '0.4em',
   },
   '& ::-webkit-scrollbar-track': {

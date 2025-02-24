@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { fetchIBOVendpoint } from "/src/__api__/db/apiService";
 import sectorsData from './sectors.json';
+import { useTheme, useMediaQuery } from '@mui/material';
 
 const SunburstStocks = () => {
   const [data, setData] = useState([]);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     const fetchData = async () => {
@@ -23,7 +26,7 @@ const SunburstStocks = () => {
   };
 
   const formatSectorName = (sector) => {
-    return sector.split(' ').join('\n');
+    return isMobile ? sector : sector.split(' ').join('\n');
   };
 
   const processStockData = (stocks) => {
@@ -39,7 +42,7 @@ const SunburstStocks = () => {
       
       sectors[formattedSector].push({
         name: stock.symbol,
-        value: Math.abs(stock.variation), // Use absolute value for size
+        value: Math.abs(stock.variation),
         itemStyle: {
           color: getColorByVariation(stock.variation)
         }
@@ -65,12 +68,11 @@ const SunburstStocks = () => {
     title: {
       text: 'Variação IBOVESPA',
       textStyle: {
-        fontSize: 14,
+        fontSize: isMobile ? 12 : 14,
         align: 'center'
       },
-      subtextStyle: {
-        align: 'center'
-      },
+      top: isMobile ? 5 : 10,
+      left: 'center'
     },
     tooltip: {
       formatter: function (params) {
@@ -82,7 +84,7 @@ const SunburstStocks = () => {
     series: {
       type: 'sunburst',
       data: data,
-      radius: [0, '95%'],
+      radius: [0, isMobile ? '90%' : '95%'],
       sort: null,
       emphasis: {
         focus: 'ancestor'
@@ -90,41 +92,56 @@ const SunburstStocks = () => {
       levels: [
         {},
         {
-          r0: '15%',
-          r: '45%',
+          r0: isMobile ? '20%' : '15%',
+          r: isMobile ? '40%' : '45%',
           itemStyle: {
-            borderWidth: 2
+            borderWidth: isMobile ? 1 : 2
           },
           label: {
             rotate: 'tangential',
-            fontSize: 10,
+            fontSize: isMobile ? 8 : 10,
             align: 'center'
           }
         },
         {
-          r0: '45%',
-          r: '75%',
+          r0: isMobile ? '40%' : '45%',
+          r: isMobile ? '70%' : '75%',
           label: {
-            align: 'right'
+            align: 'right',
+            fontSize: isMobile ? 8 : 10
           }
         },
         {
-          r0: '70%',
-          r: '72%',
+          r0: isMobile ? '70%' : '75%',
+          r: isMobile ? '72%' : '77%',
           label: {
             position: 'outside',
-            padding: 3,
-            silent: false
+            padding: isMobile ? 2 : 3,
+            silent: false,
+            fontSize: isMobile ? 8 : 10
           },
           itemStyle: {
-            borderWidth: 3
+            borderWidth: isMobile ? 2 : 3
           }
         }
       ]
     }
   };
 
-  return <ReactECharts option={option} style={{ height: '600px' }} />;
+  return (
+    <ReactECharts 
+      option={option} 
+      style={{ 
+        height: '100%',
+        width: '100%',
+        minHeight: isMobile ? '350px' : '600px'
+      }}
+      opts={{ 
+        renderer: 'canvas',
+        devicePixelRatio: window.devicePixelRatio
+      }}
+    />
+  );
 };
 
 export default SunburstStocks;

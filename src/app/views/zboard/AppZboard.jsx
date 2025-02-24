@@ -1,47 +1,88 @@
 import React from 'react';
-import { Box, styled } from "@mui/material";
-import { Breadcrumb, SimpleCard } from "app/components";
+import { Box, styled, useTheme, useMediaQuery } from "@mui/material";
 import SunburstStocks from "./shared/SBPage";
-import TreeMapPage from "./shared/TreeMapPage";
+import ScatterPage from "./shared/ScatterPage";
 import FluxoEstrangeiroPage from './shared/FluxoEstrangeiroPage';
 import CurvaJurosPage from './shared/CurvaJurosPage';
 import PerformancePage from './shared/PerformancePage';
 import PearsonPage from './shared/PearsonPage';
-import ScatterPage from './shared/ScatterPage'; // Import the new ScatterPage
 
-// STYLED COMPONENTS
 const Container = styled("div")(({ theme }) => ({
-  margin: "30px",
-  [theme.breakpoints.down("sm")]: { margin: "16px" },
+  margin: theme.spacing(2),
+  [theme.breakpoints.down("sm")]: { 
+    margin: theme.spacing(1),
+    padding: 0
+  },
   "& .breadcrumb": {
-    marginBottom: "30px",
-    [theme.breakpoints.down("sm")]: { marginBottom: "16px" }
+    marginBottom: theme.spacing(2),
+    [theme.breakpoints.down("sm")]: { 
+      marginBottom: theme.spacing(1) 
+    }
+  }
+}));
+
+const GridBox = styled(Box)(({ theme }) => ({
+  display: 'grid',
+  gap: theme.spacing(2),
+  [theme.breakpoints.down("sm")]: {
+    gap: theme.spacing(1)
+  },
+  '& > *': {
+    minWidth: 0, // Prevent overflow on small screens
+    width: '100%'
+  }
+}));
+
+const ChartCard = styled(Box)(({ theme }) => ({
+  backgroundColor: theme.palette.background.paper,
+  borderRadius: theme.shape.borderRadius,
+  boxShadow: theme.shadows[1],
+  padding: theme.spacing(2),
+  [theme.breakpoints.down("sm")]: {
+    padding: theme.spacing(1),
+  },
+  height: '100%',
+  overflow: 'hidden',
+  '& h3': {
+    fontSize: '1.25rem',
+    [theme.breakpoints.down("sm")]: {
+      fontSize: '1rem',
+      marginBottom: theme.spacing(1)
+    }
   }
 }));
 
 export default function AppZboard() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   return (
     <Container>
-      <Box display="flex" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap">        
-        <Box sx={{ flex: 1, minWidth: "49%", marginRight: 1, marginBottom: 2 }}>
-          <SunburstStocks /> 
-        </Box>
-        <Box sx={{ flex: 1, minWidth: "49%", marginLeft: 1, marginBottom: 2 }}>
-          <ScatterPage /> {/* Add the ScatterPage here, next to SunburstStocks */}
-        </Box>
-        <Box sx={{ flex: 1, minWidth: "90%", marginRight: 1, marginBottom: 2 }}>
+      <GridBox>
+        <ChartCard>
+          <SunburstStocks />
+        </ChartCard>
+        
+        <ChartCard>
+          <ScatterPage />
+        </ChartCard>
+
+        <ChartCard>
           <FluxoEstrangeiroPage />
-        </Box>
-        <Box sx={{ flex: 1, minWidth: "49%", marginLeft: 1, marginBottom: 2 }}>
+        </ChartCard>
+
+        <ChartCard>
           <CurvaJurosPage />
-        </Box>
-        <Box sx={{ flex: 1, minWidth: "100%", marginBottom: 2 }}>
+        </ChartCard>
+
+        <ChartCard>
           <PerformancePage />
-        </Box>
-        <Box sx={{ flex: 1, minWidth: "100%", marginBottom: 2 }}>
+        </ChartCard>
+
+        <ChartCard>
           <PearsonPage />
-        </Box>
-      </Box>
+        </ChartCard>
+      </GridBox>
     </Container>
   );
 }
