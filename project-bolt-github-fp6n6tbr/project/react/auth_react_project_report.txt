@@ -1,0 +1,1205 @@
+You are a React expert tasked with assisting in the development and improvement of a React project. You will be provided with the complete project structure, including all files and their contents. Your role is to analyze this information and provide guidance, corrections, and assistance in building new features and directories. Be specific to show the directory path when suggesting a code alteration.
+
+Project Structure:
+./
+    index.html
+    product.description.html
+    seecodesv3.py
+    src/
+        app/
+            auth/
+            utils/
+            views/
+                sessions/
+                    login/
+                    register/
+        __api__/
+            db/
+
+
+Codes in my project:
+File: .\src\main.jsx
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+// ROOT APP COMPONENT
+import App from "./app/App";
+// THIRD PARTY CSS
+import "perfect-scrollbar/css/perfect-scrollbar.css";
+
+const root = createRoot(document.getElementById("root"));
+
+root.render(
+  <StrictMode>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </StrictMode>
+);
+
+
+################################################################################
+
+File: .\src\app\App.jsx
+import { useRoutes } from "react-router-dom";
+import CssBaseline from "@mui/material/CssBaseline";
+// ROOT THEME PROVIDER
+import { MatxTheme } from "./components";
+// ALL CONTEXTS
+import SettingsProvider from "./contexts/SettingsContext";
+import { AuthProvider } from "./contexts/FirebaseAuthContext";
+// ROUTES
+import routes from "./routes";
+// FAKE SERVER
+import "../__api__";
+
+export default function App() {
+  const content = useRoutes(routes);
+
+  return (
+    <SettingsProvider>
+      <AuthProvider>
+        <MatxTheme>
+          <CssBaseline />
+          {content}
+        </MatxTheme>
+      </AuthProvider>
+    </SettingsProvider>
+  );
+}
+
+
+################################################################################
+
+File: .\src\app\routes.jsx
+import { lazy } from "react";
+import { Navigate } from "react-router-dom";
+
+import AuthGuard from "./auth/AuthGuard";
+import { authRoles } from "./auth/authRoles";
+
+import Loadable from "./components/Loadable";
+import MatxLayout from "./components/MatxLayout/MatxLayout";
+import sessionRoutes from "./views/sessions/session-routes";
+import materialRoutes from "app/views/material-kit/MaterialRoutes";
+import recomendationsRoutes from "app/views/recomendations/recommendations-routes";
+import screenerRoutes from "app/views/screener/screener-routes";
+import zboardRoutes from "app/views/zboard/zboard-routes";
+import volatilidadeRoutes from "app/views/volatilidade/volatilidade-routes";
+import rrgRoutes from "app/views/rrg/rrg-routes";
+import survivalRoutes from "app/views/survival/survival-routes";
+import portfolioRoutes from "app/views/portfolio/portfolio-routes";
+
+// E-CHART PAGE
+const AppEchart = Loadable(lazy(() => import("app/views/charts/echarts/AppEchart")));
+// DASHBOARD PAGE
+const Analytics = Loadable(lazy(() => import("app/views/dashboard/Analytics")));
+
+
+const routes = [
+  { path: "/", element: <Navigate to="zboard/dashboard" /> },
+  {
+    element: (
+      <AuthGuard>
+        <MatxLayout />
+      </AuthGuard>
+    ),
+    children: [
+      ...materialRoutes,
+      ...recomendationsRoutes,
+      ...screenerRoutes,
+      ...zboardRoutes,
+      ...volatilidadeRoutes,
+      ...rrgRoutes,
+      ...survivalRoutes,
+      ...portfolioRoutes,
+      // dashboard route
+      { path: "/dashboard/default", element: <Analytics />, auth: authRoles.admin },
+      // e-chart route
+      { path: "/charts/echarts", element: <AppEchart />, auth: authRoles.editor }
+    ]
+  },
+
+  // session pages route
+  ...sessionRoutes
+];
+
+export default routes;
+
+
+################################################################################
+
+File: .\src\app\auth\AuthGuard.jsx
+import { Navigate, useLocation } from "react-router-dom";
+// HOOK
+import useAuth from "app/hooks/useAuth";
+
+export default function AuthGuard({ children }) {
+  const { isAuthenticated } = useAuth();
+  const { pathname } = useLocation();
+
+  if (isAuthenticated) return <>{children}</>;
+
+  return <Navigate replace to="/session/signin" state={{ from: pathname }} />;
+}
+
+
+################################################################################
+
+File: .\src\app\views\sessions\ForgotPassword.jsx
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Card from "@mui/material/Card";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import { styled } from "@mui/material/styles";
+
+// STYLED COMPONENTS
+const StyledRoot = styled("div")(() => ({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: "#1A2038",
+  minHeight: "100vh !important",
+  "& .card": {
+    maxWidth: 800,
+    margin: "1rem",
+    borderRadius: 12
+  },
+  ".img-wrapper": {
+    display: "flex",
+    padding: "2rem",
+    alignItems: "center",
+    justifyContent: "center"
+  }
+}));
+
+const ContentBox = styled("div")(({ theme }) => ({
+  padding: 32,
+  background: theme.palette.background.default
+}));
+
+export default function ForgotPassword() {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("admin@example.com");
+
+  const handleFormSubmit = () => {
+    console.log(email);
+  };
+
+  return (
+    <StyledRoot>
+      <Card className="card">
+        <div className="img-wrapper">
+          <img width="300" src="/assets/images/illustrations/dreamer.svg" alt="Illustration" />
+        </div>
+
+        <ContentBox>
+          <form onSubmit={handleFormSubmit}>
+            <TextField
+              type="email"
+              name="email"
+              size="small"
+              label="Email"
+              value={email}
+              variant="outlined"
+              onChange={(e) => setEmail(e.target.value)}
+              sx={{ mb: 3, width: "100%" }}
+            />
+
+            <Button fullWidth variant="contained" color="primary" type="submit">
+              Reset Password
+            </Button>
+
+            <Button
+              fullWidth
+              color="primary"
+              variant="outlined"
+              onClick={() => navigate(-1)}
+              sx={{ mt: 2 }}>
+              Go Back
+            </Button>
+          </form>
+        </ContentBox>
+      </Card>
+    </StyledRoot>
+  );
+}
+
+
+################################################################################
+
+File: .\src\app\views\sessions\NotFound.jsx
+import Button from "@mui/material/Button";
+import { styled } from "@mui/material/styles";
+import { useNavigate } from "react-router-dom";
+
+// STYLED COMPONENTS
+const StyledImage = styled("img")({
+  width: "100%",
+  marginBottom: "32px"
+});
+
+const NotFoundRoot = styled("div")({
+  width: "100%",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  height: "100vh !important",
+  "& .content": {
+    maxWidth: 320,
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center"
+  }
+});
+
+export default function NotFound() {
+  const navigate = useNavigate();
+
+  return (
+    <NotFoundRoot>
+      <div className="content">
+        <StyledImage src="/assets/images/illustrations/404.svg" alt="404-Not Found" />
+
+        <Button color="primary" variant="contained" onClick={() => navigate(-1)}>
+          Go Back
+        </Button>
+      </div>
+    </NotFoundRoot>
+  );
+}
+
+
+################################################################################
+
+File: .\src\app\views\sessions\session-routes.jsx
+import { lazy } from "react";
+
+const NotFound = lazy(() => import("./NotFound"));
+const ForgotPassword = lazy(() => import("./ForgotPassword"));
+
+const FirebaseLogin = lazy(() => import("./login/FirebaseLogin"));
+const FirebaseRegister = lazy(() => import("./register/FirebaseRegister"));
+
+// const JwtLogin = Loadable(lazy(() => import("./login/JwtLogin")));
+// const JwtRegister = Loadable(lazy(() => import("./register/JwtRegister")));
+// const Auth0Login = Loadable(lazy(() => import("./login/Auth0Login")));
+
+const sessionRoutes = [
+  { path: "/session/signup", element: <FirebaseRegister /> },
+  { path: "/session/signin", element: <FirebaseLogin /> },
+  { path: "/session/forgot-password", element: <ForgotPassword /> },
+  { path: "*", element: <NotFound /> }
+];
+
+export default sessionRoutes;
+
+
+################################################################################
+
+File: .\src\app\views\sessions\login\Auth0Login.jsx
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Card from "@mui/material/Card";
+import Grid from "@mui/material/Grid2";
+import Button from "@mui/material/Button";
+import styled from "@mui/material/styles/styled";
+// GLOBAL CUSTOM COMPONENTS
+import { Paragraph } from "app/components/Typography";
+import { FlexAlignCenter } from "app/components/FlexBox";
+// GLOBAL CUSTOM HOOKS
+import useAuth from "app/hooks/useAuth";
+
+// styled components
+const Auth0Root = styled("div")({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minHeight: "100vh !important"
+});
+
+const StyledCard = styled(Card)({
+  maxWidth: 800,
+  margin: "1rem",
+  borderRadius: 12,
+  "& .cardHolder": { background: "#1A2038" }
+});
+
+export default function Auth0Login() {
+  const [message, setMessage] = useState("");
+  const { loginWithPopup } = useAuth();
+
+  const navigate = useNavigate();
+
+  const handleLogin = async () => {
+    try {
+      await loginWithPopup();
+      navigate("/");
+    } catch (e) {
+      console.error(e);
+      setMessage(e.message);
+    }
+  };
+
+  return (
+    <Auth0Root>
+      <StyledCard>
+        <Grid container>
+          <Grid size={12}>
+            <FlexAlignCenter p={4} bgcolor="background.default">
+              <img src="/assets/images/illustrations/dreamer.svg" width="400" alt="Login" />
+            </FlexAlignCenter>
+
+            <FlexAlignCenter p={4}>
+              <Button
+                fullWidth
+                variant="contained"
+                onClick={handleLogin}
+                className="socialButton"
+                endIcon={<img src="/assets/images/logos/auth0.svg" alt="AuthO" />}>
+                Sign In With
+              </Button>
+            </FlexAlignCenter>
+
+            {message && <Paragraph sx={{ color: "error.main" }}>{message}</Paragraph>}
+          </Grid>
+        </Grid>
+      </StyledCard>
+    </Auth0Root>
+  );
+}
+
+
+################################################################################
+
+File: .\src\app\views\sessions\login\FirebaseLogin.jsx
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useSnackbar } from "notistack";
+import { Formik } from "formik";
+import * as Yup from "yup";
+
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import Grid from "@mui/material/Grid2";
+import Button from "@mui/material/Button";
+import Checkbox from "@mui/material/Checkbox";
+import TextField from "@mui/material/TextField";
+import { styled, useTheme } from "@mui/material/styles";
+import LoadingButton from "@mui/lab/LoadingButton";
+// GLOBAL CUSTOM COMPONENTS
+import MatxLogo from "app/components/MatxLogo";
+import MatxDivider from "app/components/MatxDivider";
+import { Paragraph, Span } from "app/components/Typography";
+// GLOBAL CUSTOM HOOKS
+import useAuth from "app/hooks/useAuth";
+import ZommaLogo from "app/components/ZommaLogo"; // Import the new logo component
+
+// STYLED COMPONENTS
+const GoogleButton = styled(Button)(({ theme }) => ({
+  color: "rgba(0, 0, 0, 0.87)",
+  boxShadow: theme.shadows[0],
+  backgroundColor: "#e0e0e0",
+  "&:hover": { backgroundColor: "#d5d5d5" }
+}));
+
+const Logo = styled("div")({
+  gap: 10,
+  display: "flex",
+  alignItems: "center",
+  "& span": { fontSize: 26, lineHeight: 1.3, fontWeight: 800 }
+});
+
+const FirebaseRoot = styled("div")(({ theme }) => ({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  background: "#3A1352",
+  minHeight: "100vh !important",
+  "& .card": { maxWidth: 800, margin: "1rem" },
+  "& .cardLeft": {
+    color: "#fff",
+    height: "100%",
+    display: "flex",
+    padding: "32px 56px",
+    flexDirection: "column",
+    backgroundSize: "cover",
+    background: "#161c37 url(/assets/images/bg-3.png) no-repeat",
+    [theme.breakpoints.down("sm")]: { minWidth: 200 },
+    "& img": { width: 32, height: 32 }
+  },
+  "& .mainTitle": {
+    fontSize: 18,
+    lineHeight: 1.3,
+    marginBottom: 24
+  },
+  "& .item": {
+    position: "relative",
+    marginBottom: 12,
+    paddingLeft: 16,
+    "&::after": {
+      top: 8,
+      left: 0,
+      width: 4,
+      height: 4,
+      content: '""',
+      borderRadius: 4,
+      position: "absolute",
+      backgroundColor: "#4BF59B"
+    }
+  }
+}));
+
+// initial login credentials
+const initialValues = {
+  email: "",
+  password: "",
+  remember: false
+};
+
+// form field validation schema
+const validationSchema = Yup.object().shape({
+  password: Yup.string()
+    .min(6, "Password must be 6 character length")
+    .required("Password is required!"),
+  email: Yup.string().email("Invalid Email address").required("Email is required!")
+});
+
+export default function FirebaseLogin() {
+  const theme = useTheme();
+  const navigate = useNavigate();
+  const { state } = useLocation();
+  const { enqueueSnackbar } = useSnackbar();
+  const { signInWithEmail, signInWithGoogle } = useAuth();
+
+  const handleFormSubmit = async (values) => {
+    try {
+      // alert(JSON.stringify(values, null, 4));
+      await signInWithEmail(values.email, values.password);
+      navigate(state ? state.from : "/");
+      enqueueSnackbar("Logged In Successfully", { variant: "success" });
+    } catch (error) {
+      alert(JSON.stringify(error, null, 4));
+      enqueueSnackbar(error.message, { variant: "error" });
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      await signInWithGoogle();
+      navigate("/");
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  return (
+    <FirebaseRoot>
+      <Card className="card">
+        <Grid container>
+          <Grid size={{ md: 6, xs: 12 }}>
+            <div className="cardLeft">
+              <Logo>
+                <ZommaLogo /> 
+              </Logo>
+
+              <h1 className="mainTitle">Intuição Sugere, Dados Comprovam</h1>
+
+              <div className="features">
+                <div className="item">Recomendação de Analistas</div>
+                <div className="item">RRG</div>
+                <div className="item">Rastreamento de Estratégias</div>
+              </div>
+            </div>
+          </Grid>
+
+          <Grid size={{ md: 6, xs: 12 }}>
+            <Box px={4} pt={4}>
+              <GoogleButton
+                fullWidth
+                variant="contained"
+                onClick={handleGoogleLogin}
+                startIcon={<img src="/assets/images/logos/google.svg" alt="google" />}>
+                Sign In With Google
+              </GoogleButton>
+            </Box>
+
+            <MatxDivider sx={{ mt: 3, px: 4 }} text="Or" />
+
+            <Box p={4}>
+              <Formik
+                onSubmit={handleFormSubmit}
+                initialValues={initialValues}
+                validationSchema={validationSchema}>
+                {({
+                  values,
+                  errors,
+                  touched,
+                  isSubmitting,
+                  handleChange,
+                  handleBlur,
+                  handleSubmit
+                }) => (
+                  <form onSubmit={handleSubmit}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="email"
+                      name="email"
+                      label="Email"
+                      variant="outlined"
+                      onBlur={handleBlur}
+                      value={values.email}
+                      onChange={handleChange}
+                      helperText={touched.email && errors.email}
+                      error={Boolean(errors.email && touched.email)}
+                      sx={{ mb: 3 }}
+                    />
+
+                    <TextField
+                      fullWidth
+                      size="small"
+                      name="password"
+                      type="password"
+                      label="Password"
+                      variant="outlined"
+                      onBlur={handleBlur}
+                      value={values.password}
+                      onChange={handleChange}
+                      helperText={touched.password && errors.password}
+                      error={Boolean(errors.password && touched.password)}
+                      sx={{ mb: 1.5 }}
+                    />
+
+                    <Box display="flex" justifyContent="space-between">
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Checkbox
+                          size="small"
+                          name="remember"
+                          onChange={handleChange}
+                          checked={values.remember}
+                          sx={{ padding: 0 }}
+                        />
+
+                        <Paragraph>Remember Me</Paragraph>
+                      </Box>
+
+                      <NavLink
+                        to="/session/forgot-password"
+                        style={{ color: theme.palette.primary.main }}>
+                        Forgot password?
+                      </NavLink>
+                    </Box>
+
+                    <LoadingButton
+                      type="submit"
+                      color="primary"
+                      loading={isSubmitting}
+                      variant="contained"
+                      sx={{ my: 2 }}>
+                      Login
+                    </LoadingButton>
+
+                    <Paragraph>
+                      Don't have an account?
+                      <NavLink
+                        to="/session/signup"
+                        style={{
+                          marginInlineStart: 5,
+                          color: theme.palette.primary.main
+                        }}>
+                        Register
+                      </NavLink>
+                    </Paragraph>
+                  </form>
+                )}
+              </Formik>
+            </Box>
+          </Grid>
+        </Grid>
+      </Card>
+    </FirebaseRoot>
+  );
+}
+
+
+################################################################################
+
+File: .\src\app\views\sessions\login\JwtLogin.jsx
+import { NavLink, useNavigate } from "react-router-dom";
+import { Formik } from "formik";
+import * as Yup from "yup";
+
+import Card from "@mui/material/Card";
+import Box from "@mui/material/Box";
+import Checkbox from "@mui/material/Checkbox";
+import TextField from "@mui/material/TextField";
+import Grid from "@mui/material/Grid2";
+import styled from "@mui/material/styles/styled";
+import useTheme from "@mui/material/styles/useTheme";
+import LoadingButton from "@mui/lab/LoadingButton";
+
+import useAuth from "app/hooks/useAuth";
+import { Paragraph } from "app/components/Typography";
+
+// STYLED COMPONENTS
+const FlexBox = styled(Box)(() => ({
+  display: "flex"
+}));
+
+const ContentBox = styled("div")(() => ({
+  height: "100%",
+  padding: "32px",
+  position: "relative",
+  background: "rgba(0, 0, 0, 0.01)"
+}));
+
+const StyledRoot = styled("div")(() => ({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: "#1A2038",
+  minHeight: "100% !important",
+  "& .card": {
+    maxWidth: 800,
+    minHeight: 400,
+    margin: "1rem",
+    display: "flex",
+    borderRadius: 12,
+    alignItems: "center"
+  },
+
+  ".img-wrapper": {
+    height: "100%",
+    minWidth: 320,
+    display: "flex",
+    padding: "2rem",
+    alignItems: "center",
+    justifyContent: "center"
+  }
+}));
+
+// initial login credentials
+const initialValues = {
+  email: "jason@ui-lib.com",
+  password: "dummyPass",
+  remember: true
+};
+
+// form field validation schema
+const validationSchema = Yup.object().shape({
+  password: Yup.string()
+    .min(6, "Password must be 6 character length")
+    .required("Password is required!"),
+  email: Yup.string().email("Invalid Email address").required("Email is required!")
+});
+
+export default function JwtLogin() {
+  const theme = useTheme();
+  const navigate = useNavigate();
+
+  const { login } = useAuth();
+
+  const handleFormSubmit = async (values) => {
+    try {
+      await login(values.email, values.password);
+      navigate("/");
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  return (
+    <StyledRoot>
+      <Card className="card">
+        <Grid container>
+          <Grid size={{ sm: 6, xs: 12 }}>
+            <div className="img-wrapper">
+              <img src="/assets/images/illustrations/dreamer.svg" width="100%" alt="" />
+            </div>
+          </Grid>
+
+          <Grid size={{ sm: 6, xs: 12 }}>
+            <ContentBox>
+              <Formik
+                onSubmit={handleFormSubmit}
+                initialValues={initialValues}
+                validationSchema={validationSchema}>
+                {({
+                  values,
+                  errors,
+                  touched,
+                  isSubmitting,
+                  handleChange,
+                  handleBlur,
+                  handleSubmit
+                }) => (
+                  <form onSubmit={handleSubmit}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="email"
+                      name="email"
+                      label="Email"
+                      variant="outlined"
+                      onBlur={handleBlur}
+                      value={values.email}
+                      onChange={handleChange}
+                      helperText={touched.email && errors.email}
+                      error={Boolean(errors.email && touched.email)}
+                      sx={{ mb: 3 }}
+                    />
+
+                    <TextField
+                      fullWidth
+                      size="small"
+                      name="password"
+                      type="password"
+                      label="Password"
+                      variant="outlined"
+                      onBlur={handleBlur}
+                      value={values.password}
+                      onChange={handleChange}
+                      helperText={touched.password && errors.password}
+                      error={Boolean(errors.password && touched.password)}
+                      sx={{ mb: 1.5 }}
+                    />
+
+                    <FlexBox justifyContent="space-between">
+                      <FlexBox gap={1}>
+                        <Checkbox
+                          size="small"
+                          name="remember"
+                          onChange={handleChange}
+                          checked={values.remember}
+                          sx={{ padding: 0 }}
+                        />
+
+                        <Paragraph>Remember Me</Paragraph>
+                      </FlexBox>
+
+                      <NavLink
+                        to="/session/forgot-password"
+                        style={{ color: theme.palette.primary.main }}>
+                        Forgot password?
+                      </NavLink>
+                    </FlexBox>
+
+                    <LoadingButton
+                      type="submit"
+                      color="primary"
+                      loading={isSubmitting}
+                      variant="contained"
+                      sx={{ my: 2 }}>
+                      Login
+                    </LoadingButton>
+
+                    <Paragraph>
+                      Don't have an account?
+                      <NavLink
+                        to="/session/signup"
+                        style={{ color: theme.palette.primary.main, marginLeft: 5 }}>
+                        Register
+                      </NavLink>
+                    </Paragraph>
+                  </form>
+                )}
+              </Formik>
+            </ContentBox>
+          </Grid>
+        </Grid>
+      </Card>
+    </StyledRoot>
+  );
+}
+
+
+################################################################################
+
+File: .\src\app\views\sessions\register\FirebaseRegister.jsx
+import { useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useSnackbar } from "notistack";
+import { Formik } from "formik";
+import * as Yup from "yup";
+
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import Grid from "@mui/material/Grid2";
+import Button from "@mui/material/Button";
+import Checkbox from "@mui/material/Checkbox";
+import TextField from "@mui/material/TextField";
+import styled from "@mui/material/styles/styled";
+import LoadingButton from "@mui/lab/LoadingButton";
+import useTheme from "@mui/material/styles/useTheme";
+// GLOBAL CUSTOM COMPONENTS
+import MatxDivider from "app/components/MatxDivider";
+import { Paragraph } from "app/components/Typography";
+// GLOBAL CUSTOM HOOKS
+import useAuth from "app/hooks/useAuth";
+
+// STYLED COMPONENTS
+const ContentBox = styled("div")(({ theme }) => ({
+  height: "100%",
+  padding: "32px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: theme.palette.background.default
+}));
+
+const IMG = styled("img")({ width: "100%" });
+
+const GoogleButton = styled(Button)(({ theme }) => ({
+  color: "rgba(0, 0, 0, 0.87)",
+  backgroundColor: "#e0e0e0",
+  boxShadow: theme.shadows[0],
+  "&:hover": { backgroundColor: "#d5d5d5" }
+}));
+
+const RegisterRoot = styled("div")({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  background: "#1A2038",
+  minHeight: "100vh !important",
+  "& .card": { maxWidth: 750, margin: 16, borderRadius: 12 }
+});
+
+// initial login credentials
+const initialValues = {
+  email: "",
+  password: "",
+  remember: true
+};
+
+// form field validation schema
+const validationSchema = Yup.object().shape({
+  password: Yup.string()
+    .min(6, "Password must be 6 character length")
+    .required("Password is required!"),
+  email: Yup.string().email("Invalid Email address").required("Email is required!")
+});
+
+export default function FirebaseRegister() {
+  const theme = useTheme();
+  const navigate = useNavigate();
+  const { enqueueSnackbar } = useSnackbar();
+  const [loading, setLoading] = useState(false);
+  const { createUserWithEmail, signInWithGoogle } = useAuth();
+
+  const handleGoogleRegister = async () => {
+    try {
+      await signInWithGoogle();
+      navigate("/");
+    } catch (e) {
+      console.error(e);
+      setLoading(false);
+    }
+  };
+
+  const handleFormSubmit = async (values) => {
+    try {
+      setLoading(true);
+      await createUserWithEmail(values.email, values.password);
+      navigate("/");
+      enqueueSnackbar("Register Successfully!", { variant: "success" });
+    } catch (e) {
+      setLoading(false);
+      enqueueSnackbar(e.message, { variant: "error" });
+    }
+  };
+
+  return (
+    <RegisterRoot>
+      <Card className="card">
+        <Grid container>
+          <Grid size={{ md: 6, xs: 12 }}>
+            <ContentBox>
+              <IMG src="/assets/images/illustrations/posting_photo.svg" alt="Photo" />
+            </ContentBox>
+          </Grid>
+
+          <Grid size={{ md: 6, xs: 12 }}>
+            <Box px={4} pt={4}>
+              <GoogleButton
+                fullWidth
+                variant="contained"
+                onClick={handleGoogleRegister}
+                startIcon={<img src="/assets/images/logos/google.svg" alt="google" />}>
+                Sign In With Google
+              </GoogleButton>
+            </Box>
+
+            <MatxDivider sx={{ mt: 3, px: 4 }} text="Or" />
+
+            <Box p={4} height="100%">
+              <Formik
+                onSubmit={handleFormSubmit}
+                initialValues={initialValues}
+                validationSchema={validationSchema}>
+                {({ values, errors, touched, handleChange, handleBlur, handleSubmit }) => (
+                  <form onSubmit={handleSubmit}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="email"
+                      name="email"
+                      label="Email"
+                      variant="outlined"
+                      onBlur={handleBlur}
+                      value={values.email}
+                      onChange={handleChange}
+                      helperText={touched.email && errors.email}
+                      error={Boolean(errors.email && touched.email)}
+                      sx={{ mb: 3 }}
+                    />
+                    <TextField
+                      fullWidth
+                      size="small"
+                      name="password"
+                      type="password"
+                      label="Password"
+                      variant="outlined"
+                      onBlur={handleBlur}
+                      value={values.password}
+                      onChange={handleChange}
+                      helperText={touched.password && errors.password}
+                      error={Boolean(errors.password && touched.password)}
+                      sx={{ mb: 1.5 }}
+                    />
+
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Checkbox
+                        size="small"
+                        name="remember"
+                        onChange={handleChange}
+                        checked={values.remember}
+                        sx={{ padding: 0 }}
+                      />
+
+                      <Paragraph fontSize={13}>
+                        I have read and agree to the terms of service.
+                      </Paragraph>
+                    </Box>
+
+                    <LoadingButton
+                      type="submit"
+                      color="primary"
+                      loading={loading}
+                      variant="contained"
+                      sx={{ my: 2 }}>
+                      Register
+                    </LoadingButton>
+
+                    <Paragraph>
+                      Already have an account?
+                      <NavLink
+                        to="/session/signin"
+                        style={{ color: theme.palette.primary.main, marginLeft: 5 }}>
+                        Login
+                      </NavLink>
+                    </Paragraph>
+                  </form>
+                )}
+              </Formik>
+            </Box>
+          </Grid>
+        </Grid>
+      </Card>
+    </RegisterRoot>
+  );
+}
+
+
+################################################################################
+
+File: .\src\app\views\sessions\register\JwtRegister.jsx
+import { NavLink, useNavigate } from "react-router-dom";
+import { Formik } from "formik";
+import * as Yup from "yup";
+
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import Grid from "@mui/material/Grid2";
+import Checkbox from "@mui/material/Checkbox";
+import TextField from "@mui/material/TextField";
+import styled from "@mui/material/styles/styled";
+import useTheme from "@mui/material/styles/useTheme";
+import LoadingButton from "@mui/lab/LoadingButton";
+
+import useAuth from "app/hooks/useAuth";
+import { Paragraph } from "app/components/Typography";
+
+// STYLED COMPONENTS
+const ContentBox = styled("div")(() => ({
+  height: "100%",
+  padding: "32px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  background: "rgba(0, 0, 0, 0.01)"
+}));
+
+const JWTRegister = styled(JustifyBox)(() => ({
+  background: "#1A2038",
+  minHeight: "100vh !important",
+  "& .card": {
+    maxWidth: 800,
+    minHeight: 400,
+    margin: "1rem",
+    display: "flex",
+    borderRadius: 12,
+    alignItems: "center"
+  }
+}));
+
+// initial login credentials
+const initialValues = {
+  email: "",
+  password: "",
+  username: "",
+  remember: true
+};
+
+// form field validation schema
+const validationSchema = Yup.object().shape({
+  password: Yup.string()
+    .min(6, "Password must be 6 character length")
+    .required("Password is required!"),
+  email: Yup.string().email("Invalid Email address").required("Email is required!")
+});
+
+export default function JwtRegister() {
+  const theme = useTheme();
+  const { register } = useAuth();
+  const navigate = useNavigate();
+
+  const handleFormSubmit = (values) => {
+    try {
+      register(values.email, values.username, values.password);
+      navigate("/");
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  return (
+    <JWTRegister>
+      <Card className="card">
+        <Grid container>
+          <Grid size={{ md: 6, xs: 12 }}>
+            <ContentBox>
+              <img
+                width="100%"
+                alt="Register"
+                src="/assets/images/illustrations/posting_photo.svg"
+              />
+            </ContentBox>
+          </Grid>
+
+          <Grid size={{ md: 6, xs: 12 }}>
+            <Box p={4} height="100%">
+              <Formik
+                onSubmit={handleFormSubmit}
+                initialValues={initialValues}
+                validationSchema={validationSchema}>
+                {({
+                  values,
+                  errors,
+                  touched,
+                  isSubmitting,
+                  handleChange,
+                  handleBlur,
+                  handleSubmit
+                }) => (
+                  <form onSubmit={handleSubmit}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="text"
+                      name="username"
+                      label="Username"
+                      variant="outlined"
+                      onBlur={handleBlur}
+                      value={values.username}
+                      onChange={handleChange}
+                      helperText={touched.username && errors.username}
+                      error={Boolean(errors.username && touched.username)}
+                      sx={{ mb: 3 }}
+                    />
+
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="email"
+                      name="email"
+                      label="Email"
+                      variant="outlined"
+                      onBlur={handleBlur}
+                      value={values.email}
+                      onChange={handleChange}
+                      helperText={touched.email && errors.email}
+                      error={Boolean(errors.email && touched.email)}
+                      sx={{ mb: 3 }}
+                    />
+                    <TextField
+                      fullWidth
+                      size="small"
+                      name="password"
+                      type="password"
+                      label="Password"
+                      variant="outlined"
+                      onBlur={handleBlur}
+                      value={values.password}
+                      onChange={handleChange}
+                      helperText={touched.password && errors.password}
+                      error={Boolean(errors.password && touched.password)}
+                      sx={{ mb: 2 }}
+                    />
+
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Checkbox
+                        size="small"
+                        name="remember"
+                        onChange={handleChange}
+                        checked={values.remember}
+                        sx={{ padding: 0 }}
+                      />
+
+                      <Paragraph fontSize={13}>
+                        I have read and agree to the terms of service.
+                      </Paragraph>
+                    </Box>
+
+                    <LoadingButton
+                      type="submit"
+                      color="primary"
+                      variant="contained"
+                      loading={isSubmitting}
+                      sx={{ mb: 2, mt: 3 }}>
+                      Register
+                    </LoadingButton>
+
+                    <Paragraph>
+                      Already have an account?
+                      <NavLink
+                        to="/session/signin"
+                        style={{ color: theme.palette.primary.main, marginLeft: 5 }}>
+                        Login
+                      </NavLink>
+                    </Paragraph>
+                  </form>
+                )}
+              </Formik>
+            </Box>
+          </Grid>
+        </Grid>
+      </Card>
+    </JWTRegister>
+  );
+}
+
+
+################################################################################
+
